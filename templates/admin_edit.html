@@ -1,0 +1,39 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Editar Posto</h2>
+  <form method="post">
+    <div class="form-group">
+      <label>Nome</label>
+      <input type="text" class="form-control" name="nome" value="{{ posto.nome }}" required>
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" class="form-control" name="endereco" value="{{ posto.endereco }}" required>
+    </div>
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label>Latitude</label>
+        <input type="text" class="form-control" name="latitude" value="{{ posto.latitude }}" required>
+      </div>
+      <div class="form-group col-md-6">
+        <label>Longitude</label>
+        <input type="text" class="form-control" name="longitude" value="{{ posto.longitude }}" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Preço Gasolina (R$)</label>
+      <input type="number" step="0.001" class="form-control" name="preco_gasolina" value="{{ posto.preco_gasolina }}">
+    </div>
+    <div class="form-group">
+      <label>Preço Etanol (R$)</label>
+      <input type="number" step="0.001" class="form-control" name="preco_etanol" value="{{ posto.preco_etanol }}">
+    </div>
+    <div class="form-group">
+      <label>Preço Diesel (R$)</label>
+      <input type="number" step="0.001" class="form-control" name="preco_diesel" value="{{ posto.preco_diesel }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Ranking dos 10 Melhores Preços</h2>
+
+  <form method="get" class="form-inline mb-4">
+    <label for="tipo" class="mr-2">Tipo de Combustível:</label>
+    <select name="tipo" id="tipo" class="form-control mr-2">
+      <option value="gasolina" {% if tipo == 'gasolina' %}selected{% endif %}>Gasolina</option>
+      <option value="etanol" {% if tipo == 'etanol' %}selected{% endif %}>Etanol</option>
+      <option value="diesel" {% if tipo == 'diesel' %}selected{% endif %}>Diesel</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+  </form>
+
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th>Posição</th><th>Posto</th><th>Preço (R$)</th><th>Atualizado em</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for posto in postos %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ posto.nome }}</td>
+        <td>
+          {% if tipo == 'gasolina' %}
+            {{ '%.3f'|format(posto.preco_gasolina) }}
+          {% elif tipo == 'etanol' %}
+            {{ '%.3f'|format(posto.preco_etanol) }}
+          {% else %}
+            {{ '%.3f'|format(posto.preco_diesel) }}
+          {% endif %}
+        </td>
+        <td>{{ posto.atualizado_em and posto.atualizado_em.strftime('%d/%m/%Y %H:%M') or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <button id="btn-sugerir" class="btn btn-success">
+    <span id="btn-text">Sugerir Melhor Posto Perto de Mim</span>
+    <span id="btn-spinner" class="spinner-border spinner-border-sm ml-2" role="status" aria-hidden="true" style="display: none;"></span>
+  </button>
+  <div id="suggestion" class="mt-3"></div>
+  <div id="map" style="height: 400px; margin-top: 20px;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const btn = document.getElementById('btn-sugerir');
+  const btnText = document.getElementById('btn-text');
+  const btnSpinner = document.getElementById('btn-spinner');
+  const suggestionEl = document.getElementById('suggestion');
+  const mapEl = document.getElementById('map');
+  const tipoSelect = document.getElementById('tipo');
+
+  btn.addEventListener('click', () => {
+    suggestionEl.innerHTML = '';
+    mapEl.innerHTML = '';
+
+    if (!navigator.geolocation) {
+      suggestionEl.innerText = 'Geolocalização não suportada.';
+      return;
+    }
+
+    btn.disabled = true;
+    btnText.textContent = 'Carregando...';
+    btnSpinner.style.display = 'inline-block';
+
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const tipo = tipoSelect.value;
+
+      fetch(`/api/sugerir?lat=${lat}&lon=${lon}&tipo=${tipo}`)
+        .then(res => res.json())
+        .then(posto => {
+          if (posto.error) {
+            suggestionEl.innerHTML = `<p class="text-danger">${posto.error}</p>`;
+            return;
+          }
+
+          const distancia = calcularDistancia(lat, lon, posto.latitude, posto.longitude).toFixed(1);
+          suggestionEl.innerHTML = `<strong>Melhor custo-benefício:</strong> ${posto.nome} (${distancia} km)`;
+
+          const map = L.map(mapEl).setView([lat, lon], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+
+          L.Routing.control({
+            waypoints: [
+              L.latLng(lat, lon),
+              L.latLng(posto.latitude, posto.longitude)
+            ],
+            draggableWaypoints: false,
+            addWaypoints: false
+          }).addTo(map);
+
+          suggestionEl.innerHTML += `<br><small class="text-muted">Nota: sua localização pode não ser precisa se estiver usando Wi-Fi ou IP.</small>`;
+
+        })
+        .catch(err => {
+          suggestionEl.innerHTML = `<p class="text-danger">Erro ao sugerir posto: ${err.message}</p>`;
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btnText.textContent = 'Sugerir Melhor Custo-Benefício Perto de Mim';
+          btnSpinner.style.display = 'none';
+        });
+    }, err => {
+      suggestionEl.innerHTML = `<p class="text-danger">Erro de geolocalização: ${err.message}</p>`;
+      btn.disabled = false;
+      btnText.textContent = 'Sugerir Melhor Custo-Benefício Perto de Mim';
+      btnSpinner.style.display = 'none';
+    }, {
+      enableHighAccuracy: true
+    });
+  });
+});
+</script>
+{% endblock %}
