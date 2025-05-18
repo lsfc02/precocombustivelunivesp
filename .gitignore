@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Ambiente virtual
+venv/
+.venv/
+
+# IDEs
+.idea/
+.vscode/
+
+# Next.js / Node
+node_modules/
+.next/
+out/
+*.log
