@@ -1,0 +1,43 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Cadastro de Posto</h2>
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Nome</label>
+      <input type="text" class="form-control" name="nome" required>
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" class="form-control" name="endereco" required>
+    </div>
+    <div class="form-row">
+      <div class="form-group col-md-6">
+        <label>Latitude</label>
+        <input type="text" class="form-control" name="latitude" required>
+      </div>
+      <div class="form-group col-md-6">
+        <label>Longitude</label>
+        <input type="text" class="form-control" name="longitude" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Preço Gasolina (R$)</label>
+      <input type="number" step="0.001" class="form-control" name="preco_gasolina">
+    </div>
+    <div class="form-group">
+      <label>Preço Etanol (R$)</label>
+      <input type="number" step="0.001" class="form-control" name="preco_etanol">
+    </div>
+    <div class="form-group">
+      <label>Preço Diesel (R$)</label>
+      <input type="number" step="0.001" class="form-control" name="preco_diesel">
+    </div>
+    <div class="form-group">
+      <label>Imagem do Posto</label>
+      <input type="file" class="form-control-file" name="imagem" accept="image/*">
+    </div>
+    <button type="submit" class="btn btn-primary">Cadastrar</button>
+  </form>
+{% endblock %}
